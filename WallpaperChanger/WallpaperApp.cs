@@ -1,8 +1,5 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
+﻿using Microsoft.Win32;
+using Newtonsoft.Json;
 
 namespace WallpaperChanger
 {
@@ -10,11 +7,12 @@ namespace WallpaperChanger
 	{
 		private NotifyIcon notifyIcon;  // TODO1: add this to fix the icon https://stackoverflow.com/questions/14723843/notifyicon-remains-in-tray-even-after-application-closing-but-disappears-on-mous
 										// TODO2: icon size guideline https://stackoverflow.com/a/3531316
-										// TODO3: setup automatic app startup
 		private ToolStripMenuItem[] notifyIconToolStripMenuItems;
+		private ToolStripMenuItem notifyIconAutoStartupItem;
 		private WallpaperFetcher fetcher;
 		private AppConfiguration appConfig = new AppConfiguration();
 		private const string APP_DATA_DIR_NAME = "WallpaperChanger";
+		private const string REGISTRY_STARTUP_ENTRY_NAME = "WallpaperChanger";
 		private const string CACHE_DIR_NAME = "Cache";
 		private const string CONFIG_FILE_NAME = "WallpaperChangerConfig.json";
 		private const string LOG_FILE_NAME = "WallpaperChangerLog.txt";
@@ -35,12 +33,10 @@ namespace WallpaperChanger
 			fetcher.ResolutionChangedHandler += OnSelectedResolutionUpdated;
 			wallpaperTimer = new System.Windows.Forms.Timer();
 			wallpaperTimer.Tick += OnCheckTime;
-			// wallpaperTimer.Interval = 5000;
 			wallpaperTimer.Interval = WALLPAPER_TIMER_INTERVAL;
 			wallpaperTimer.Start();
 
 			logger.Info("Application started");
-			UpdateSystemWallpaper();
 		}
 
 		private void InitConfigurationAndLogging()
@@ -138,6 +134,7 @@ namespace WallpaperChanger
 			List<ToolStripItem> items = new List<ToolStripItem>();
 			ToolStripItem itemExit = new ToolStripMenuItem("Exit");
 			ToolStripMenuItem itemMenuResolution = new ToolStripMenuItem("Resolution");
+			ToolStripMenuItem itemMenuSettings = new ToolStripMenuItem("Settings");
 
 			ToolStripMenuItem[] resolutionItems = new ToolStripMenuItem[]
 			{
@@ -157,6 +154,17 @@ namespace WallpaperChanger
 			// ToolStripDropDownMenu
 			itemExit.Click += MenuClickExit;
 
+			notifyIconAutoStartupItem = new ToolStripMenuItem("Auto startup", null, MenuClickToggleStartup);
+			notifyIconAutoStartupItem.Checked = IsAutoStartupEnabled();
+
+			ToolStripMenuItem[] settingsItems = new ToolStripMenuItem[]
+			{
+				notifyIconAutoStartupItem,
+				new ToolStripMenuItem("About")	// TODO about menu
+			};
+			itemMenuSettings.DropDownItems.AddRange(settingsItems);
+
+			items.Add(itemMenuSettings);
 			items.Add(itemMenuResolution);
 			items.Add(itemExit);
 			
@@ -206,6 +214,42 @@ namespace WallpaperChanger
 			{
 				logger.Error(ex.Message);
 			}
+		}
+
+		private void MenuClickToggleStartup(object? sender, EventArgs e)
+		{
+			bool autoStartupEnabled = IsAutoStartupEnabled();
+			UpdateAutoStartup(!autoStartupEnabled);
+		}
+
+		private bool IsAutoStartupEnabled()
+		{
+			RegistryKey? key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+
+			return key.GetValue(REGISTRY_STARTUP_ENTRY_NAME) != null;
+		}
+
+		private void UpdateAutoStartup(bool enabled)
+		{
+			RegistryKey? key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+
+			if (enabled)
+			{
+				if (key.GetValue(REGISTRY_STARTUP_ENTRY_NAME) == null)
+				{					
+					string fullPath = System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName;
+					key.SetValue(REGISTRY_STARTUP_ENTRY_NAME, fullPath);
+				}
+			}
+			else
+			{
+				if (key.GetValue(REGISTRY_STARTUP_ENTRY_NAME) != null)
+				{
+					key.DeleteValue(REGISTRY_STARTUP_ENTRY_NAME);
+				}
+			}
+
+			notifyIconAutoStartupItem.Checked = enabled;
 		}
 
 		private void MenuClickExit(object? sender, EventArgs e)
