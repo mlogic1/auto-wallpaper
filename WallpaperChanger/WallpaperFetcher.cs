@@ -1,9 +1,10 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace WallpaperChanger
@@ -55,7 +56,7 @@ namespace WallpaperChanger
 		}
 
 		// returns a stream to file
-		public async Task<Stream?> DownloadWallpaper()
+		public async Task<Stream> DownloadWallpaper()
 		{
 			Stream imageStream = null;
 			HttpClient client = new HttpClient();
@@ -80,7 +81,7 @@ namespace WallpaperChanger
 						throw new Exception("Failed to get wallpaper from Bing API. Status code: " + responseImage.StatusCode);
 					}
 
-					imageStream = responseImage.Content.ReadAsStream();
+					imageStream = await responseImage.Content.ReadAsStreamAsync();
 				}
 			}
 			catch(Exception ex)

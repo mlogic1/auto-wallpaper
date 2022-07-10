@@ -1,5 +1,10 @@
 ﻿using Microsoft.Win32;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace WallpaperChanger
 {
@@ -201,7 +206,7 @@ namespace WallpaperChanger
 			}
 		}
 
-		private void MenuClickResolutionClick(object? sender, EventArgs e)
+		private void MenuClickResolutionClick(object sender, EventArgs e)
 		{
 			try
 			{
@@ -216,7 +221,7 @@ namespace WallpaperChanger
 			}
 		}
 
-		private void MenuClickToggleStartup(object? sender, EventArgs e)
+		private void MenuClickToggleStartup(object sender, EventArgs e)
 		{
 			bool autoStartupEnabled = IsAutoStartupEnabled();
 			UpdateAutoStartup(!autoStartupEnabled);
@@ -224,14 +229,14 @@ namespace WallpaperChanger
 
 		private bool IsAutoStartupEnabled()
 		{
-			RegistryKey? key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+			RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
 
 			return key.GetValue(REGISTRY_STARTUP_ENTRY_NAME) != null;
 		}
 
 		private void UpdateAutoStartup(bool enabled)
 		{
-			RegistryKey? key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+			RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
 
 			if (enabled)
 			{
@@ -252,12 +257,12 @@ namespace WallpaperChanger
 			notifyIconAutoStartupItem.Checked = enabled;
 		}
 
-		private void MenuClickExit(object? sender, EventArgs e)
+		private void MenuClickExit(object sender, EventArgs e)
 		{
 			Application.Exit();
 		}
 
-		void OnCheckTime(object? sender, EventArgs e)
+		void OnCheckTime(object sender, EventArgs e)
 		{
 			DateTime now = DateTime.Now;
 			double diff = (now - appConfig.LastWallpaperDate).TotalHours;
@@ -271,7 +276,7 @@ namespace WallpaperChanger
 		{
 			try
 			{
-				Stream? imageStream = await fetcher.DownloadWallpaper();
+				Stream imageStream = await fetcher.DownloadWallpaper();
 				if (imageStream == null)
 				{
 					throw new Exception("Unable to get imagestream from wallpaper fetcher");
