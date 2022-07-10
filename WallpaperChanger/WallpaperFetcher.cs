@@ -54,12 +54,10 @@ namespace WallpaperChanger
 			}
 		}
 
-		// returns path on disk to wallpaper
-		public async Task<string> DownloadWallpaper()
+		// returns a stream to file
+		public async Task<Stream?> DownloadWallpaper()
 		{
-			// string diskPathTmpImage = Path.Combine(Path.GetTempPath(), "tmpWallpaper.jpg");
-			string diskPathTmpImage = Path.GetTempFileName();
-
+			Stream imageStream = null;
 			HttpClient client = new HttpClient();
 
 			try
@@ -82,13 +80,7 @@ namespace WallpaperChanger
 						throw new Exception("Failed to get wallpaper from Bing API. Status code: " + responseImage.StatusCode);
 					}
 
-					Stream imageStream = responseImage.Content.ReadAsStream();
-
-					using (var fileStream = File.Create(diskPathTmpImage))
-					{
-						imageStream.Seek(0, SeekOrigin.Begin);
-						imageStream.CopyTo(fileStream);
-					}
+					imageStream = responseImage.Content.ReadAsStream();
 				}
 			}
 			catch(Exception ex)
@@ -96,7 +88,7 @@ namespace WallpaperChanger
 				throw new Exception("Failed to contact Bing API: " + ex.Message);
 			}
 			
-			return diskPathTmpImage;
+			return imageStream;
 		}
 	}
 }

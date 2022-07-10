@@ -10,14 +10,17 @@ namespace WallpaperChanger
 	{
 		private NotifyIcon notifyIcon;  // TODO1: add this to fix the icon https://stackoverflow.com/questions/14723843/notifyicon-remains-in-tray-even-after-application-closing-but-disappears-on-mous
 										// TODO2: icon size guideline https://stackoverflow.com/a/3531316
+										// TODO3: setup automatic app startup
 		private ToolStripMenuItem[] notifyIconToolStripMenuItems;
 		private WallpaperFetcher fetcher;
 		private AppConfiguration appConfig = new AppConfiguration();
 		private const string APP_DATA_DIR_NAME = "WallpaperChanger";
+		private const string CACHE_DIR_NAME = "Cache";
 		private const string CONFIG_FILE_NAME = "WallpaperChangerConfig.json";
 		private const string LOG_FILE_NAME = "WallpaperChangerLog.txt";
 		private string CONFIG_FILE_FULL_PATH = null;
 		private string LOG_FILE_FULL_PATH = null;
+		private DirectoryInfo cacheDirectory = null;
 		private ILogger logger;
 		// win32 wallpaper https://stackoverflow.com/questions/1061678/change-desktop-wallpaper-using-code-in-net
 		private System.Windows.Forms.Timer wallpaperTimer;
@@ -37,6 +40,7 @@ namespace WallpaperChanger
 			wallpaperTimer.Start();
 
 			logger.Info("Application started");
+			UpdateSystemWallpaper();
 		}
 
 		private void InitConfigurationAndLogging()
@@ -44,18 +48,19 @@ namespace WallpaperChanger
 			string appDataDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), APP_DATA_DIR_NAME);
 			try
 			{
-				Directory.CreateDirectory(appDataDir);
+				var dirInfo = Directory.CreateDirectory(appDataDir);
+				cacheDirectory = dirInfo.CreateSubdirectory(CACHE_DIR_NAME);
+				
 			}
 			catch (Exception ex)
 			{
 				MessageBox.Show("Unable to create config and log directory: " + appDataDir + "\r\nMore details: " + ex.Message, "Wallpaper changer was unable to start", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				Application.Exit();
 			}
-			
 
 			LOG_FILE_FULL_PATH = Path.Combine(appDataDir, LOG_FILE_NAME);
 			CONFIG_FILE_FULL_PATH = Path.Combine(appDataDir, CONFIG_FILE_NAME);
-			
+
 			try
 			{
 				logger = new FileLogger(LOG_FILE_FULL_PATH);
@@ -222,15 +227,37 @@ namespace WallpaperChanger
 		{
 			try
 			{
-				string wallpaperDiskPath = await fetcher.DownloadWallpaper();
+				Stream? imageStream = await fetcher.DownloadWallpaper();
+				if (imageStream == null)
+				{
+					throw new Exception("Unable to get imagestream from wallpaper fetcher");
+				}
+
+				// clear cache
+				IEnumerable<FileInfo> cacheFiles = cacheDirectory.EnumerateFiles();
+				logger.Info(String.Format("Clearing cache, {0} files.", cacheFiles.Count()));
+				foreach (FileInfo file in cacheFiles)
+				{
+					file.Delete();
+				}
+
+				// write wallpaper to disk
+				string wallpaperID = Guid.NewGuid().ToString();
+				string wallpaperDiskPath = Path.Combine(cacheDirectory.FullName, wallpaperID + ".jpg");
+				logger.Info(String.Format("Writing wallpaper to cache directory: {0}", wallpaperID));
+				using (var fileStream = File.Create(wallpaperDiskPath))
+				{
+					imageStream.Seek(0, SeekOrigin.Begin);
+					imageStream.CopyTo(fileStream);
+				}
+
 				SystemWallpaperUpdater.UpdateSystemWallpaper(wallpaperDiskPath);
-				File.Delete(wallpaperDiskPath);
 				appConfig.LastWallpaperDate = DateTime.Now; // TODO: this needs to be autosaved
 				SaveConfiguration();
 			}
 			catch(Exception ex)
 			{
-				MessageBox.Show(ex.Message);
+				logger.Error(ex.Message);
 			}
 		}
 	}
