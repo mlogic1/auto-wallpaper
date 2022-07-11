@@ -9,6 +9,9 @@ namespace WallpaperChanger
 {
 	internal static class SystemWallpaperUpdater
 	{
+		// win32 wallpaper API
+		// https://stackoverflow.com/questions/1061678/change-desktop-wallpaper-using-code-in-net (Thanks Niel)
+
 		[DllImport("user32.dll", CharSet = CharSet.Auto)]
 		private static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni);
 

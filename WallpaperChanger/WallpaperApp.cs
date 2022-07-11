@@ -16,16 +16,18 @@ namespace WallpaperChanger
 		private ToolStripMenuItem notifyIconAutoStartupItem;
 		private WallpaperFetcher fetcher;
 		private AppConfiguration appConfig = new AppConfiguration();
+
+	#region CONSTANTS
 		private const string APP_DATA_DIR_NAME = "WallpaperChanger";
 		private const string REGISTRY_STARTUP_ENTRY_NAME = "WallpaperChanger";
 		private const string CACHE_DIR_NAME = "Cache";
 		private const string CONFIG_FILE_NAME = "WallpaperChangerConfig.json";
 		private const string LOG_FILE_NAME = "WallpaperChangerLog.txt";
+	#endregion
 		private string CONFIG_FILE_FULL_PATH = null;
 		private string LOG_FILE_FULL_PATH = null;
 		private DirectoryInfo cacheDirectory = null;
 		private ILogger logger;
-		// win32 wallpaper https://stackoverflow.com/questions/1061678/change-desktop-wallpaper-using-code-in-net
 		private System.Windows.Forms.Timer wallpaperTimer;
 		private const int WALLPAPER_TIMER_INTERVAL = 300000;  // 5 min
 
@@ -284,7 +286,7 @@ namespace WallpaperChanger
 
 				// clear cache
 				IEnumerable<FileInfo> cacheFiles = cacheDirectory.EnumerateFiles();
-				logger.Info(String.Format("Clearing cache, {0} files.", cacheFiles.Count()));
+				logger.Info(String.Format("Clearing cache, {0} file(s).", cacheFiles.Count()));
 				foreach (FileInfo file in cacheFiles)
 				{
 					file.Delete();
