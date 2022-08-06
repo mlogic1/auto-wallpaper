@@ -167,7 +167,7 @@ namespace WallpaperChanger
 			ToolStripMenuItem[] settingsItems = new ToolStripMenuItem[]
 			{
 				notifyIconAutoStartupItem,
-				new ToolStripMenuItem("About")	// TODO about menu
+				new ToolStripMenuItem("About", null, MenuClickAboutShowDialog)
 			};
 			itemMenuSettings.DropDownItems.AddRange(settingsItems);
 
@@ -227,6 +227,14 @@ namespace WallpaperChanger
 		{
 			bool autoStartupEnabled = IsAutoStartupEnabled();
 			UpdateAutoStartup(!autoStartupEnabled);
+		}
+
+		private void MenuClickAboutShowDialog(object sender, EventArgs e)
+		{
+			using (Form f = new AboutForm())
+			{
+				f.ShowDialog();
+			}
 		}
 
 		private bool IsAutoStartupEnabled()

@@ -7,7 +7,7 @@
     <ProjectGuid>{D3C61E77-5302-4087-94BA-323599667B87}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>WallpaperChanger</RootNamespace>
-    <AssemblyName>WallpaperChanger</AssemblyName>
+    <AssemblyName>Wallpaper Changer</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -52,6 +52,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AboutForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AboutForm.Designer.cs">
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="AppConfiguration.cs" />
     <Compile Include="FileLogger.cs" />
     <Compile Include="ILogger.cs" />
@@ -61,6 +67,9 @@
     <Compile Include="SystemWallpaperUpdater.cs" />
     <Compile Include="WallpaperApp.cs" />
     <Compile Include="WallpaperFetcher.cs" />
+    <EmbeddedResource Include="AboutForm.resx">
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
